@@ -14,7 +14,7 @@ start blender -b -P render_job.py
 
 install with:
 
-git clone git clone https://github.com/Lucy-Elliot/ORBS
+git clone https://github.com/Lucy-Elliot/ORBS
 
 cd ORBS
 
