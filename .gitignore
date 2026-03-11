@@ -1,0 +1,16 @@
+# Ignore build files
+build/
+bin/
+*.exe
+*.out
+*.o
+*.obj
+
+# Ignore generated data
+render_job.py
+camera_data.txt
+render_progress.txt
+config.txt
+*.mp4
+
+
