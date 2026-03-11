@@ -674,11 +674,11 @@ void LoadFiles() {
 // started more animations, but theyre taking a while so im leaving that to later
 void InitWizardTheme() {
     // Window: 13 frames, slow twinkle, with wizard tower yayyy
-    layerWindow = { LoadTexture("resources/Wizard_Window.png"), 13, 0.2f, 0, 0, {0, -70}, 4.0f };
+    layerWindow = { LoadTexture("../resources/Wizard_Window.png"), 13, 0.2f, 0, 0, {0, -70}, 4.0f };
     // Shelf: Static or slight potion bubble (1 frame or more)
     //layerShelf  = { LoadTexture("shelf_sheet.png"), 1, 0.1f, 0, 0, {120, -20}, 4.0f };
     // Wizard: 30 frames, wizarding around
-    layerWizard = { LoadTexture("resources/wizard_person1.png"), 30, 0.08f, 0, 0, {0, 30}, 6.0f };
+    layerWizard = { LoadTexture("../resources/wizard_person1.png"), 30, 0.08f, 0, 0, {0, 30}, 6.0f };
     // Orb: 6 frames, glowing pulse -- animation coming soon.
     //layerOrb    = { LoadTexture("orb_sheet.png"), 6, 0.08f, 0, 0, {-30, 60}, 4.0f };
 }

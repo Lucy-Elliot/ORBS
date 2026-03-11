@@ -1,10 +1,13 @@
-# Ignore build files
+# Ignore build file
 build/
 bin/
 *.exe
 *.out
 *.o
 *.obj
+_deps/
+CMakeFiles/
+CMakeCache.txt
 
 # Ignore generated data
 render_job.py
@@ -13,4 +16,7 @@ render_progress.txt
 config.txt
 *.mp4
 
-
+# DO NOT IGNORE omg
+!resources/
+!*.ttf
+!*.png
