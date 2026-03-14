@@ -83,6 +83,8 @@ float lastClickTime = 0.0f; // for detecting double clicks in the keyframe list 
 int editingKeyframeIndex = -1; // for editing keyframe index in the keyframe list when double clicked, -1 when not editing
 char kfEditBuffer[16] = { 0 }; // for editing keyframe frame numbers in the sidebar when double clicked
 int kfLetterCount = 0; // for editing keyframe frame numbers in the sidebar when double clicked
+int delCamera = 0; // for marking a camera for deletion in the keyframe list in the sidebar, stores the id of the camera to delete, 0 when not marking any camera for deletion
+
 
 // creating a geometry nodes style thing for the atoms/arrows, hopefully makes less laggy
 Material atomMaterial = LoadMaterialDefault();
@@ -877,7 +879,7 @@ int main() {
 
 
     // loading stuff
-    texWizardWindow = LoadTexture("resources/Wizard_Window.png");
+    texWizardWindow = LoadTexture("../resources/Wizard_Window.png");
     frameWidth = texWizardWindow.width / frameCount;
 
     while (!WindowShouldClose()) {
@@ -964,12 +966,12 @@ int main() {
             int kfY = (int)currentTopBarHeight + (50 * globalFontScale) + keyframeScrollY;
     
             for (int i = 0; i < (int)path.size(); i++) {
-                Rectangle kfRect = { (float)renderW + 10, (float)kfY, currentSidebarWidth - 20, 25 * globalFontScale };
+                Rectangle kfRect = { (float)renderW + 10, (float)kfY, currentSidebarWidth - 200, 25 * globalFontScale };
                 bool hovering = CheckCollisionPointRec(mousePos, kfRect) && CheckCollisionPointRec(mousePos, kfView);
 
                 if (editingKeyframeIndex == i) {
                     // edit mode -- edits the keyframes frame number.
-                    DrawRectangleRec(kfRect, COL_TERMINAL);
+                    DrawRectangleRec(kfRect , COL_TERMINAL);
                     DrawRectangleLinesEx(kfRect, 1, COL_ACCENT);
                     DrawThemeText(kfEditBuffer, kfRect.x + 5, kfRect.y + 5, 20, COL_TEXT);
 
@@ -987,6 +989,18 @@ int main() {
                         path[i].frameNumber = atoi(kfEditBuffer);
                         editingKeyframeIndex = -1;
                     }
+                    
+                    //float optX = mX + 20 * globalFontScale;
+                    float buttonX = kfRect.x + 250* globalFontScale;
+                    if (AutoButton(delCamera == 0 ? "[X] " : "[ ] ", &buttonX , kfRect.y)){
+                        if (delCamera == 0) {
+                            path.erase(path.begin() + i);
+                            editingKeyframeIndex = -1;
+                        } else {
+                            delCamera = 1 - delCamera; // toggle delete mode.
+                        }  
+                    };
+
                 } else {
                     // view mode shows keyframe info and allows snapping camera to it on click, also shows hover effect
                     Color textColor = hovering ? COL_ACCENT : COL_TEXT;
