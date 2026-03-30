@@ -10,6 +10,17 @@
 #include <cmath> 
 #include <cstdlib>
 #include <cstring>
+#include "rlgl.h"       
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
+#include <stdlib.h> 
+#define RAYGUI_IMPLEMENTATION
+#ifndef TextToFloat
+    #define TextToFloat(text) (float)atof(text)
+#endif
+#include "raygui.h"
+
 namespace fs = std::filesystem;
 
 // GLSL Shader for Hardware Instancing -- otherwise the shading doesnt work and atoms dont show up in 3D window.
@@ -84,6 +95,8 @@ int editingKeyframeIndex = -1; // for editing keyframe index in the keyframe lis
 char kfEditBuffer[16] = { 0 }; // for editing keyframe frame numbers in the sidebar when double clicked
 int kfLetterCount = 0; // for editing keyframe frame numbers in the sidebar when double clicked
 int delCamera = 0; // for marking a camera for deletion in the keyframe list in the sidebar, stores the id of the camera to delete, 0 when not marking any camera for deletion
+bool showGreenMesh = false;
+
 
 
 // creating a geometry nodes style thing for the atoms/arrows, hopefully makes less laggy
@@ -141,7 +154,7 @@ float rendermodalscroll = 0.0f;
 float globalFontScale = 1.0f; 
 int targetFPS = 60;
 
-//DATA STRUCTURES
+//DATA STRUCTURES!
 struct Atom { Vector3 position; Color color; };
 struct Keyframe { 
     int id; 
@@ -153,6 +166,27 @@ struct Keyframe {
 struct MatrixDrop { float x; float y; float speed; char character; };
 struct Bat { float x; float y; float offset; };
 struct Star { float x; float y; float brightness; };
+
+
+struct SmartCube {
+    Vector3 position;
+    Vector3 size;
+    int hoveredFace = -1; 
+    int gradientMode = 2;   // Defaulting to z
+    bool isMenuOpen = false;
+    Vector2 menuPos = { 0, 0 };
+    float lastClickTime = 0.0f;
+    const float doubleClickThreshold = 0.25f;
+
+    BoundingBox GetBounds() {
+        return (BoundingBox){
+            { position.x - size.x/2.0f, position.y - size.y/2.0f, position.z - size.z/2.0f },
+            { position.x + size.x/2.0f, position.y + size.y/2.0f, position.z + size.z/2.0f }
+        };
+    }
+};
+
+
 
 // Texture globals
 Texture2D texTwinklingWindow;
@@ -322,6 +356,52 @@ bool AutoButton(const char* text, float* currentX, float y) {
     *currentX += width + (25.0f * globalFontScale);
     return clicked;
 }
+void UpdateSmartCube(SmartCube &cube, Camera camera) {
+    Ray ray = GetMouseRay(GetMousePosition(), camera);
+    RayCollision col = GetRayCollisionBox(ray, cube.GetBounds());
+    float modalX = 100.0f;
+    float modalY = 100.0f;
+    float modalW = 100.0f;
+    Vector2 delta = GetMouseDelta(); // We defined it as 'delta' here
+
+    if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        cube.hoveredFace = -1;
+        if (col.hit) {
+            BoundingBox box = cube.GetBounds();
+            float ep = 0.05f;
+            if (fabs(col.point.x - box.max.x) < ep) cube.hoveredFace = 0;
+            else if (fabs(col.point.x - box.min.x) < ep) cube.hoveredFace = 1;
+            else if (fabs(col.point.y - box.max.y) < ep) cube.hoveredFace = 2;
+            else if (fabs(col.point.y - box.min.y) < ep) cube.hoveredFace = 3;
+            else if (fabs(col.point.z - box.max.z) < ep) cube.hoveredFace = 4;
+            else if (fabs(col.point.z - box.min.z) < ep) cube.hoveredFace = 5;
+        }
+    }
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && col.hit) {
+        float currentTime = (float)GetTime();
+        if ((currentTime - cube.lastClickTime) < cube.doubleClickThreshold) {
+            cube.isMenuOpen = !cube.isMenuOpen;
+            cube.menuPos = GetMousePosition();
+        }
+        cube.lastClickTime = currentTime;
+    }
+
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && cube.hoveredFace != -1 && !cube.isMenuOpen) {
+        float sensitivity = 0.1f;
+        // Use 'delta' (matching the definition above)
+        if (cube.hoveredFace == 0) { float a = delta.x * sensitivity; cube.size.x += a; cube.position.x += a/2; }
+        else if (cube.hoveredFace == 1) { float a = -delta.x * sensitivity; cube.size.x += a; cube.position.x -= a/2; }
+        else if (cube.hoveredFace == 2) { float a = -delta.y * sensitivity; cube.size.y += a; cube.position.y += a/2; }
+        else if (cube.hoveredFace == 3) { float a = delta.y * sensitivity; cube.size.y += a; cube.position.y -= a/2; }
+        else if (cube.hoveredFace == 5) { float a = delta.x * sensitivity; cube.size.z += a; cube.position.z -= a/2; }
+        else if (cube.hoveredFace == 4) { float a = -delta.x * sensitivity; cube.size.z += a; cube.position.z += a/2; }
+        float closeX = (modalX + modalW) - (50.0f * globalFontScale);
+        float closeY = modalY + (10.0f * globalFontScale);
+        if (AutoButton("X", &closeX, closeY)) cube.isMenuOpen = false;
+    }
+
+}
 
 void InitVisuals() {
     int w = GetScreenWidth();
@@ -400,7 +480,7 @@ void ScanDirectoryForSequence(std::string folderPath, std::string referenceFile)
 }
 
 // export path (absolute paths + fallback) ------------------------------------
-void ExportPath(const std::vector<Keyframe>& path, int bgType, int colourScheme, char outputName[128], int atomStyle, float atomScale, float clipDistance, char custombackgroundcolour[32]) {
+void ExportPath(const std::vector<Keyframe>& path, const SmartCube& cube, int bgType, int colourScheme, char outputName[128], int atomStyle, float atomScale, float clipDistance, char custombackgroundcolour[32]) {
     std::vector<std::string> finalExportList;
     if (!foundSequenceFiles.empty()) {
         for (int i = seqStartIndex; i <= seqEndIndex; i++) {
@@ -430,6 +510,10 @@ void ExportPath(const std::vector<Keyframe>& path, int bgType, int colourScheme,
        // shifting UI values for blender camera, should make it fully centered now.
     py << "UI_SHIFT_X = " << (float)BASE_SIDEBAR_WIDTH * globalFontScale / START_WIDTH << "\n";
     py << "UI_SHIFT_Y = " << (float)BASE_TERMINAL_HEIGHT * globalFontScale / START_HEIGHT << "\n";
+    py << "CUBE_POS = (" << cube.position.x << ", " << -cube.position.z << ", " << cube.position.y << ")\n";
+    py << "CUBE_SIZE = (" << cube.size.x << ", " << cube.size.z << ", " << cube.size.y << ")\n";
+    py << "GRADIENT_MODE = " << cube.gradientMode << "\n";
+    py << "ELECTRON_COUNT = 50\n";
     py << "custombackgroundcolour = (" << custombackgroundcolour << ")\n\n";
     py << R"(
 bpy.ops.object.select_all(action='DESELECT')
@@ -481,9 +565,26 @@ def create_templates():
     atom_tmpl.name = "TemplateAtom"
     bpy.ops.object.shade_smooth()
     atom_tmpl.location = (1000, 1000, 1000)
-    return template, atom_tmpl
 
-arrow_tmpl, atom_tmpl = create_templates()
+    #Electrons template - emmission shader with sphere
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.1 * GLOBAL_SCALE)
+    electron_tmpl = bpy.context.active_object
+    electron_tmpl.name = "TemplateElectron"
+    electron_tmpl.location = (10000, 10000, 1000000)
+
+    el_mat = bpy.data.materials.new("ElectronMat")
+    el_mat.use_nodes = True
+    nodes_e = el_mat.node_tree.nodes
+    nodes_e.clear()
+    node_out = nodes_e.new("ShaderNodeOutputMaterial")
+    nodes_em = nodes_e.new("ShaderNodeEmission")
+    nodes_em.inputs[0].default_value = (0.5, 0.8, 1.0, 1.0) # light blue colour for electrons
+    nodes_em.inputs[1].default_value = 5.0 # emission strength
+    el_mat.node_tree.links.new(nodes_em.outputs[0], node_out.inputs[0])
+    electron_tmpl.data.materials.append(el_mat)
+    return template, atom_tmpl, electron_tmpl
+
+arrow_tmpl, atom_tmpl, electron_tmpl = create_templates()
 
 def setup_scene():
     bpy.ops.object.select_by_type(type='LIGHT'); bpy.ops.object.delete()
@@ -561,12 +662,30 @@ def setup_scene():
     links.new(realize.outputs[0], set_mat.inputs[0])
     links.new(set_mat.outputs[0], out_n.inputs[0])
 
-    #background colours -- ADD CUSTOM COL OPTION
+    #background colours 
     bg = bpy.context.scene.world.node_tree.nodes.get("Background")
     if BACKGROUND_TYPE == 0: bg.inputs[0].default_value = (0.02, 0.02, 0.02, 1)
     elif BACKGROUND_TYPE == 1: bg.inputs[0].default_value = (1, 1, 1, 1)
     elif BACKGROUND_TYPE == 2: bg.inputs[0].default_value = (0.3, 0, 0, 1)
     elif BACKGROUND_TYPE == 3: bg.inputs[0].default_value = custombackgroundcolour
+
+    #Glowingness of electrons
+    scene = bpy.context.scene
+    scene.render.engine = 'BLENDER_EEVEE' # force eevee for fast glows
+    scene.eevee.use_bloom = True
+    scene.eevee.bloom_intensity = 0.1  
+    scene.eevee.bloom_threshold = 0.5
+
+    #Electron summonning logic
+    electron_group = bpy.data.collections.new("Electrons")
+    bpy.context.scene.collection.children.link(electron_group)
+    import random
+    for i in  range(ELECTRON_COUNT):
+        el = bpy.data.objects.new(f"Electron_{i}", electron_tmpl.data)
+        el.location = [
+        CUBE_POS[j] + (random.random() - 0.5) * CUBE_SIZE[j] for j in range(3)
+        ]
+        electron_group.objects.link(el)
 
 
 @persistent
@@ -618,6 +737,30 @@ def update_handler(scene):
             col_attr.data[i].color = (sr, sg, sb, 1.0)
         mesh.update()
     except: pass
+
+    #electron movement stuff
+    speed = 1.0
+    for i in range(ELECTRON_COUNT):
+        el = bpy.data.objects.get(f"Electron_{i}")
+        if el:
+            if GRADIENT_MODE == 0:
+                el.location.x += speed
+            elif GRADIENT_MODE ==1:
+                el.location.y += speed
+            elif GRADIENT_MODE == 2:
+                el.location.z += speed
+            elif GRADIENT_MODE == 3:
+                el.location.x -= speed
+            elif GRADIENT_MODE ==4:
+                el.location.y -= speed
+            elif GRADIENT_MODE == 5:
+                el.location.z -= speed
+        for j in range(3):
+            half = CUBE_SIZE[j] / 2
+            if el.location[j] > CUBE_POS[j] +half:
+                el.location[j] = CUBE_POS[j] - half
+            elif el.location[j] < CUBE_POS[j] - half:
+                el.location[j] = CUBE_POS[j] + half
 
 setup_scene()
 bpy.app.handlers.frame_change_pre.clear()
@@ -802,6 +945,54 @@ void DrawLoadingScreen() {
     // blender Bar (Positioned relatively)
     }
 }
+void DrawSmartCube(SmartCube &cube, Color accent, Color white) {
+    rlPushMatrix();
+        rlTranslatef(cube.position.x, cube.position.y, cube.position.z);
+        rlScalef(cube.size.x, cube.size.y, cube.size.z);
+        
+        rlBegin(RL_QUADS);
+            auto GetVertexColor = [&](Vector3 v) {
+                float t = 0.5f; // Default center
+                if (cube.gradientMode == 0) t = v.x + 0.5f;      // X-Axis (-0.5 to 0.5)
+                else if (cube.gradientMode == 1) t = v.z + 0.5f; // Y-Axis
+                else if (cube.gradientMode == 2) t = v.y + 0.5f; // Z-Axis
+                else if (cube.gradientMode == 3) t = (-v.x  + 0.5f); //-X Axis
+                else if (cube.gradientMode == 4) t = (-v.z  + 0.5f); //-Y Axis
+                else if (cube.gradientMode == 5) t = (-v.y  + 0.5f); //-Z Axis
+                
+                return (Color){
+                    (unsigned char)(accent.r + t * (white.r - accent.r)),
+                    (unsigned char)(accent.g + t * (white.g - accent.g)),
+                    (unsigned char)(accent.b + t * (white.b - accent.b)), 255
+                };
+            };
+
+            //define the 8 corners 
+            Vector3 v[8] = {
+                {-0.5f, -0.5f,  0.5f}, {0.5f, -0.5f,  0.5f}, {0.5f,  0.5f,  0.5f}, {-0.5f,  0.5f,  0.5f}, // Front
+                {-0.5f, -0.5f, -0.5f}, {0.5f, -0.5f, -0.5f}, {0.5f,  0.5f, -0.5f}, {-0.5f,  0.5f, -0.5f}  // Back
+            };
+
+            // front Face
+            for (int i : {0, 1, 2, 3}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+            // back Face
+            for (int i : {5, 4, 7, 6}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+            // top Face
+            for (int i : {3, 2, 6, 7}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+            // Bottom Face... etc
+            for (int i : {1, 0, 4, 5}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+            //right
+            for (int i : {1, 5, 6, 2}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+            //left
+            for (int i : {4, 0, 3, 7}) { Color c = GetVertexColor(v[i]); rlColor4ub(c.r, c.g, c.b, 255); rlVertex3f(v[i].x, v[i].y, v[i].z); }
+        rlEnd();
+    rlPopMatrix();
+
+    if (cube.hoveredFace != -1) {
+        DrawCubeWiresV(cube.position, Vector3Add(cube.size, {0.05f, 0.05f, 0.05f}), GREEN);
+    }
+}
+
 void SaveSettings() {
     std::ofstream outFile("config.txt");
     if (outFile.is_open()) {
@@ -852,6 +1043,10 @@ int main() {
     SetTargetFPS(targetFPS);
     InitVisuals(); 
 
+    SmartCube myCube; 
+    myCube.position = (Vector3){ 0.0f, 2.0f, 0.0f }; // Start it at a visible spot
+    myCube.size = (Vector3){ 2.0f, 2.0f, 2.0f };     // Give it a default size
+
     LoadSettings();
     // font loading
     fontWizard  = LoadFont("wizard.ttf");
@@ -885,6 +1080,7 @@ int main() {
     while (!WindowShouldClose()) {
         if (IsWindowResized()) InitVisuals();
 
+        UpdateSmartCube(myCube, camera);
         float currentSidebarWidth = BASE_SIDEBAR_WIDTH * globalFontScale;
         float currentTopBarHeight = BASE_TOP_BAR_HEIGHT * globalFontScale;
         float currentTerminalHeight = BASE_TERMINAL_HEIGHT * globalFontScale;
@@ -914,6 +1110,9 @@ int main() {
                 currentFrame = NextFrame + targetFPS;
                 Log(TextFormat("KF added at frame %d", NextFrame));
             }
+            if(IsKeyPressed(KEY_E)){
+                showGreenMesh = !showGreenMesh;
+            }
         }
         if (IsKeyPressed(KEY_M)) showCubes = !showCubes;
 
@@ -934,11 +1133,26 @@ int main() {
                     if (!blueTransforms.empty()) {
                         DrawMeshInstanced(atomMesh, matBlue, blueTransforms.data(), (int)blueTransforms.size());
                     }
+                    if (showGreenMesh) {
+                        DrawSmartCube(myCube, COL_ACCENT, WHITE);
+                    }
                 } else {
                     for (const auto& a : atoms) DrawPoint3D(a.position, a.color);
                 }
                 DrawGrid(100, 1.0f);
             EndMode3D();
+
+        if (myCube.isMenuOpen) {
+        int x = myCube.menuPos.x;
+        int y = myCube.menuPos.y;
+        DrawRectangle(x, y, 100, 80, Fade(RAYWHITE, 0.9f));
+        if (GuiButton({(float)x + 5, (float)y + 5, 90, 20}, "Axis: X")) myCube.gradientMode = 0;
+        if (GuiButton({(float)x + 5, (float)y + 30, 90, 20}, "Axis: Y")) myCube.gradientMode = 1;
+        if (GuiButton({(float)x + 5, (float)y + 55, 90, 20}, "Axis: Z")) myCube.gradientMode = 2;
+        if (GuiButton({(float)x + 110, (float)y + 5, 90, 20}, "Axis: -X")) myCube.gradientMode = 3;
+        if (GuiButton({(float)x + 110, (float)y + 30, 90, 20}, "Axis: -Y")) myCube.gradientMode = 4;
+        if (GuiButton({(float)x + 110, (float)y + 55, 90, 20}, "Axis: -Z")) myCube.gradientMode = 5;
+        }
         EndScissorMode();
         //---------------------------------------------------
         // ----------------- Sidebar ------------------------
@@ -1068,8 +1282,9 @@ int main() {
             }
         EndScissorMode();
 
-
-        //  Terminal!!
+        // ----------------------------------
+        //  ---------  Terminal!!  ----------
+        //-----------------------------------
         DrawRectangle(0, renderH, renderW, (int)currentTerminalHeight, COL_TERMINAL);
         int logY = GetScreenHeight() - (25 * globalFontScale);
         for (int i = consoleLog.size() - 1; i >= 0; i--) {
@@ -1175,7 +1390,8 @@ int main() {
             DrawThemeText("Render Settings: Choose sequence range and ", modalX + 20, modalY + 290, 20, COL_TEXT);
             DrawThemeText("background/colour options for Blender render", modalX + 20, modalY + 330, 20, COL_TEXT);
             DrawThemeText("Settings: Adjust font size and target FPS for different animation outputs", modalX + 20, modalY + 370, 20, COL_TEXT);
-            DrawThemeText("Double Click Keyframe to Edit Frame Number, Single Click to Snap Camera", modalX + 20, modalY + 410, 20, COL_TEXT);
+            DrawThemeText("Double Click Keyframe to Edit Frame Number, \n Single Click to Snap Camera", modalX + 20, modalY + 410, 20, COL_TEXT);
+            DrawThemeText("Press E to bring up a cube which spawns electrons, \n double click to bring up axis menu, \nelectrons move from white to the themes accent colour", modalX+20, modalY + 470, 20, COL_TEXT);
             float closeX = (modalX + modalW) - (50.0f * globalFontScale);
             float closeY = modalY + (10.0f * globalFontScale);
             if (AutoButton("X", &closeX, closeY)) showHelpModal = false;
@@ -1403,7 +1619,7 @@ int main() {
                 isExporting = true;
                 exportTimer = 0.0f;
                 // Pass arguments to ExportPath
-                ExportPath(path, selectedBg, selectedColourScheme, outputFileName, selectedAtoms, atomScale, clipDistance, custombackgroundcolour);
+                ExportPath(path, myCube, selectedBg, selectedColourScheme, outputFileName, selectedAtoms, atomScale, clipDistance, custombackgroundcolour);
                 
                 if (runBlenderAutomatically) {
                     #ifdef _WIN32
