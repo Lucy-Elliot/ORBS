@@ -1,4 +1,7 @@
 VERSION 1 (pre-alpha)
+original python code by Matthew Allen, modified to add a camera and some aesthetic changes.
+
+
 
 Depenencies: Raylib 5.0+, C++17, and Blender 4.0+.
 
