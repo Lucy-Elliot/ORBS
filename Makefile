@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/c/Users/lucye/vsc/ORBS-seperated
+CMAKE_SOURCE_DIR = /mnt/c/Users/lucye/vsc/Atty-GUI
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/c/Users/lucye/vsc/ORBS-seperated
+CMAKE_BINARY_DIR = /mnt/c/Users/lucye/vsc/Atty-GUI/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/usr/bin/cpack --config ./CPackSourceConfig.cmake /mnt/c/Users/lucye/vsc/ORBS-seperated/CPackSourceConfig.cmake
+	/usr/bin/cpack --config ./CPackSourceConfig.cmake /mnt/c/Users/lucye/vsc/Atty-GUI/build/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -152,9 +152,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/lucye/vsc/ORBS-seperated/CMakeFiles /mnt/c/Users/lucye/vsc/ORBS-seperated//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/lucye/vsc/Atty-GUI/build/CMakeFiles /mnt/c/Users/lucye/vsc/Atty-GUI/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/lucye/vsc/ORBS-seperated/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/c/Users/lucye/vsc/Atty-GUI/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -246,126 +246,6 @@ update_mappings/fast:
 	$(MAKE) $(MAKESILENT) -f _deps/raylib-build/raylib/external/glfw/src/CMakeFiles/update_mappings.dir/build.make _deps/raylib-build/raylib/external/glfw/src/CMakeFiles/update_mappings.dir/build
 .PHONY : update_mappings/fast
 
-Theme.o: Theme.cpp.o
-.PHONY : Theme.o
-
-# target to build an object file
-Theme.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/Theme.cpp.o
-.PHONY : Theme.cpp.o
-
-Theme.i: Theme.cpp.i
-.PHONY : Theme.i
-
-# target to preprocess a source file
-Theme.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/Theme.cpp.i
-.PHONY : Theme.cpp.i
-
-Theme.s: Theme.cpp.s
-.PHONY : Theme.s
-
-# target to generate assembly for a file
-Theme.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/Theme.cpp.s
-.PHONY : Theme.cpp.s
-
-atom.o: atom.cpp.o
-.PHONY : atom.o
-
-# target to build an object file
-atom.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/atom.cpp.o
-.PHONY : atom.cpp.o
-
-atom.i: atom.cpp.i
-.PHONY : atom.i
-
-# target to preprocess a source file
-atom.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/atom.cpp.i
-.PHONY : atom.cpp.i
-
-atom.s: atom.cpp.s
-.PHONY : atom.s
-
-# target to generate assembly for a file
-atom.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/atom.cpp.s
-.PHONY : atom.cpp.s
-
-fileio.o: fileio.cpp.o
-.PHONY : fileio.o
-
-# target to build an object file
-fileio.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/fileio.cpp.o
-.PHONY : fileio.cpp.o
-
-fileio.i: fileio.cpp.i
-.PHONY : fileio.i
-
-# target to preprocess a source file
-fileio.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/fileio.cpp.i
-.PHONY : fileio.cpp.i
-
-fileio.s: fileio.cpp.s
-.PHONY : fileio.s
-
-# target to generate assembly for a file
-fileio.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/fileio.cpp.s
-.PHONY : fileio.cpp.s
-
-instancing.o: instancing.cpp.o
-.PHONY : instancing.o
-
-# target to build an object file
-instancing.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/instancing.cpp.o
-.PHONY : instancing.cpp.o
-
-instancing.i: instancing.cpp.i
-.PHONY : instancing.i
-
-# target to preprocess a source file
-instancing.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/instancing.cpp.i
-.PHONY : instancing.cpp.i
-
-instancing.s: instancing.cpp.s
-.PHONY : instancing.s
-
-# target to generate assembly for a file
-instancing.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/instancing.cpp.s
-.PHONY : instancing.cpp.s
-
-log.o: log.cpp.o
-.PHONY : log.o
-
-# target to build an object file
-log.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/log.cpp.o
-.PHONY : log.cpp.o
-
-log.i: log.cpp.i
-.PHONY : log.i
-
-# target to preprocess a source file
-log.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/log.cpp.i
-.PHONY : log.cpp.i
-
-log.s: log.cpp.s
-.PHONY : log.s
-
-# target to generate assembly for a file
-log.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ORBS.dir/build.make CMakeFiles/ORBS.dir/log.cpp.s
-.PHONY : log.cpp.s
-
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -409,21 +289,6 @@ help:
 	@echo "... ORBS"
 	@echo "... glfw"
 	@echo "... raylib"
-	@echo "... Theme.o"
-	@echo "... Theme.i"
-	@echo "... Theme.s"
-	@echo "... atom.o"
-	@echo "... atom.i"
-	@echo "... atom.s"
-	@echo "... fileio.o"
-	@echo "... fileio.i"
-	@echo "... fileio.s"
-	@echo "... instancing.o"
-	@echo "... instancing.i"
-	@echo "... instancing.s"
-	@echo "... log.o"
-	@echo "... log.i"
-	@echo "... log.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
