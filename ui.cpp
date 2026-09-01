@@ -63,7 +63,7 @@ void InitWizardTheme() {
 
 void InitUnicornTheme() {
     // Unicorn: 12 frames, running around
-    layerUnicorn = { LoadTexture("../resources/running_unicorn.png"), 12, 0.1f, 0, 0, {0, 40}, 6.0f };
+    layerUnicorn = { LoadTexture("../resources/running_uni.png"), 12, 0.1f, 0, 0, {0, 40}, 6.0f };
 }
 
 void UpdateBlenderProgress() {

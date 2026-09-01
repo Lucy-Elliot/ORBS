@@ -81,6 +81,25 @@ float loadingProgress = 0.0f; // 0.0 to 1.0
 
 std::vector<Atom> atoms;
 
+static Font LoadProjectFont(const char* filename) {
+    std::vector<fs::path> candidates = {
+        fs::current_path() / filename,
+        fs::current_path() / "resources" / filename,
+        fs::current_path() / ".." / filename,
+        fs::current_path() / ".." / "resources" / filename,
+        fs::path(filename)
+    };
+
+    for (const auto& candidate : candidates) {
+        if (fs::exists(candidate)) {
+            return LoadFont(candidate.string().c_str());
+        }
+    }
+
+    Log(TextFormat("Font not found: %s; using default font", filename));
+    return GetFontDefault();
+}
+
 //-----------------
 // ----- main -----
 //-----------------
@@ -115,10 +134,10 @@ int main() {
 
     LoadSettings();
     // font loading
-    fontWizard  = LoadFont("wizard.ttf");
-    fontVampire = LoadFont("vampire.ttf");
-    fontCyber   = LoadFont("cyber.ttf");
-    fontPink   = LoadFont("pink.ttf");
+    fontWizard  = LoadProjectFont("wizard.ttf");
+    fontVampire = LoadProjectFont("vampire.ttf");
+    fontCyber   = LoadProjectFont("cyber.ttf");
+    fontPink    = LoadProjectFont("pink.ttf");
     SetTheme(currentTheme);
     // general setup
     float currentSidebarWidth = BASE_SIDEBAR_WIDTH * globalFontScale;
