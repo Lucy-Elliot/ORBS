@@ -15,7 +15,7 @@ camera_data.txt
 render_progress.txt
 config.txt
 *.mp4
-
+*.sh
 # DO NOT IGNORE omg
 !resources/
 !*.ttf

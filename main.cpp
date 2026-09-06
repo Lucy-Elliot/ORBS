@@ -230,7 +230,7 @@ int main() {
         if (myCube.isMenuOpen) {
         int x = myCube.menuPos.x;
         int y = myCube.menuPos.y;
-        DrawRectangle(x, y, 100, 80, Fade(RAYWHITE, 0.9f));
+        DrawRectangle(x, y, 200, 80, Fade(RAYWHITE, 0.9f));
         if (GuiButton({(float)x + 5, (float)y + 5, 90, 20}, "Axis: X")) myCube.gradientMode = 0;
         if (GuiButton({(float)x + 5, (float)y + 30, 90, 20}, "Axis: Y")) myCube.gradientMode = 1;
         if (GuiButton({(float)x + 5, (float)y + 55, 90, 20}, "Axis: Z")) myCube.gradientMode = 2;
