@@ -1,4 +1,4 @@
-VERSION 1 (pre-alpha)
+VERSION 1
 
 Depenencies: Raylib 5.0+, C++17, and Blender 4.0+.
 

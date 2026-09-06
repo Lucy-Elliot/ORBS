@@ -134,10 +134,10 @@ int main() {
 
     LoadSettings();
     // font loading
-    fontWizard  = LoadProjectFont("wizard.ttf");
-    fontVampire = LoadProjectFont("vampire.ttf");
-    fontCyber   = LoadProjectFont("cyber.ttf");
-    fontPink    = LoadProjectFont("pink.ttf");
+    fontWizard  = LoadProjectFont("resources/wizard.ttf");
+    fontVampire = LoadProjectFont("resources/vampire.ttf");
+    fontCyber   = LoadProjectFont("resources/cyber.ttf");
+    fontPink    = LoadProjectFont("resources/pink.ttf");
     SetTheme(currentTheme);
     // general setup
     float currentSidebarWidth = BASE_SIDEBAR_WIDTH * globalFontScale;
@@ -462,7 +462,7 @@ int main() {
             float modalX = 100.0f;
             float modalY = 100.0f;
             float modalW = 650.0f * globalFontScale;
-            float modalH = 450.0f * globalFontScale;
+            float modalH = 500.0f + (25.0*globalFontScale);
             DrawRectangle(modalX, modalY, modalW, modalH, COL_SIDEBAR);
             DrawRectangleLines(modalX, modalY, modalW, modalH, COL_ACCENT);
             DrawThemeText("CONTROLS ", modalX + 20, modalY + 20, 30, COL_ACCENT);
@@ -492,7 +492,7 @@ int main() {
             DrawRectangle(mX, mY, mW, mH, COL_SIDEBAR);
             DrawRectangleLines(mX, mY, mW, mH, COL_ACCENT);
             DrawThemeText("SETTINGS", mX + 20, mY + 20, 30, COL_ACCENT);
-            DrawThemeText(TextFormat("Font Size: %.1f x", globalFontScale), mX + 20, mY + 80, 20, COL_TEXT);
+            DrawThemeText(TextFormat("Font Size: %.1f x", globalFontScale), mX + 20, (mY + 90 * 1.15*globalFontScale), 20, COL_TEXT);
 
             float btnX = mX + 20;
             float btnY = mY + 120 * globalFontScale;
