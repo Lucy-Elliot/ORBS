@@ -16,6 +16,9 @@ render_progress.txt
 config.txt
 *.mp4
 *.sh
+*.py
+*.swp
+
 # DO NOT IGNORE omg
 !resources/
 !*.ttf
